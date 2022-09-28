@@ -1,0 +1,32 @@
+name: Pre-prod Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_type:
+        type: choice
+        required: true
+        description: type of release (minor or major)
+        options:
+        - prerelease
+        default: prerelease
+
+jobs:
+  build:
+
+    runs-on: ${{matrix.os}}
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Build and Push Docker Image
+      uses: mr-smithers-excellent/docker-build-push@v5
+      with:
+        image: shashwot/nginx-php-fpm
+        tags: $(git log -n1 --date=format:'%y%m%d-' --format=%cd%h)
+        registry: docker.io
+        dockerfile: Dockerfile
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
